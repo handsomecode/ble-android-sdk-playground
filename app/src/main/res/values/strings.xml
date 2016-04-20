@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">BleSample</string>
+    <string name="status_advertising">Advertising</string>
+    <string name="status_not_started">Not started</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_disconnected">Disconnected</string>
 </resources>
