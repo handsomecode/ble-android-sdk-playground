@@ -4,4 +4,13 @@
     <string name="status_not_started">Not started</string>
     <string name="status_connected">Connected</string>
     <string name="status_disconnected">Disconnected</string>
+    <string name="central_client">Central / Client</string>
+    <string name="peripheral_server">Peripheral / Server</string>
+    <string name="choose_role">Choose Role</string>
+    <string name="status">Status:</string>
+    <string name="start_server">Start Server</string>
+    <string name="scan">Scan</string>
+    <string name="found_device">Found device:</string>
+    <string name="connect">Connect</string>
+    <string name="read">read</string>
 </resources>

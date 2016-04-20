@@ -24,23 +24,24 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class PeripheralServerActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = PeripheralServerActivity.class.getSimpleName();
 
     private TextView statusTextView;
+    private Switch startServerSwitchView;
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeAdvertiser bluetoothLeAdvertiser;
     private BluetoothGattServer gattServer;
     private Handler handler;
+
     private AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
             super.onStartSuccess(settingsInEffect);
             Log.i(TAG, "advertiseCallback:onSuccess: " + settingsInEffect.toString());
-
         }
 
         @Override
@@ -56,10 +57,11 @@ public class MainActivity extends AppCompatActivity {
             super.onConnectionStateChange(device, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 postStatus(getString(R.string.status_connected));
+                bluetoothLeAdvertiser.stopAdvertising(advertiseCallback);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                postStatus(getString(R.string.status_disconnected));
+                postStatus(getString(R.string.status_advertising));
+                startAdvertising();
             }
-
         }
 
         @Override
@@ -69,18 +71,21 @@ public class MainActivity extends AppCompatActivity {
                                                 BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
 
+            int responseOffset = 0;
             if (DeviceTemperatureProfile.TEMPERATURE_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
-                gattServer.sendResponse(device,
+                gattServer.sendResponse(
+                        device,
                         requestId,
                         BluetoothGatt.GATT_SUCCESS,
-                        0,
-                        new byte[]{42});
+                        responseOffset,
+                        getTemperatureValue());
             } else {
-                gattServer.sendResponse(device,
+                gattServer.sendResponse(
+                        device,
                         requestId,
                         BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,
-                        0,
-                        null);
+                        responseOffset,
+                        null); //response value
             }
         }
 
@@ -90,28 +95,33 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void postStatus(final String status) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                statusTextView.setText(status);
-            }
-        });
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_peripheral_server);
 
         handler = new Handler();
 
-        initView();
+        initViews();
 
         bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
+
         ensureBluetoothEnabled(bluetoothAdapter);
-        checkBleSupporting();
+        checkBleSupported();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (bluetoothLeAdvertiser != null) {
+            bluetoothLeAdvertiser.stopAdvertising(advertiseCallback);
+            gattServer.close();
+
+            statusTextView.setText(R.string.status_not_started);
+            startServerSwitchView.setChecked(false);
+        }
+
     }
 
     private void initGattServer() {
@@ -129,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         gattServer.addService(temperatureService);
     }
 
-    private void checkBleSupporting() {
+    private void checkBleSupported() {
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "No LE Support.", Toast.LENGTH_SHORT).show();
             finish();
@@ -143,9 +153,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initView() {
-        Switch startServerSwitchView = (Switch) findViewById(R.id.main_start_server_switch);
-        assert startServerSwitchView != null;
+    private void initViews() {
+        startServerSwitchView = (Switch) findViewById(R.id.peripheral_server_start_server_switch);
         startServerSwitchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -155,18 +164,18 @@ public class MainActivity extends AppCompatActivity {
                         startAdvertising();
                         statusTextView.setText(R.string.status_advertising);
                     } else {
-                        Toast.makeText(MainActivity.this, "No Advertising Support.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PeripheralServerActivity.this, "No Advertising Support.", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     bluetoothLeAdvertiser.stopAdvertising(advertiseCallback);
-                    shutdownGattServer();
+                    gattServer.close();
+
                     statusTextView.setText(R.string.status_not_started);
-                    Log.i(TAG, "Stop advertising");
                 }
             }
         });
 
-        statusTextView = (TextView) findViewById(R.id.main_status_value_text_view);
+        statusTextView = (TextView) findViewById(R.id.peripheral_server_status_value_text_view);
     }
 
     private void startAdvertising() {
@@ -184,11 +193,18 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         bluetoothLeAdvertiser.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
-
-        Log.i(TAG, "Start advertising");
     }
 
-    private void shutdownGattServer() {
-        gattServer.close();
+    private void postStatus(final String status) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                statusTextView.setText(status);
+            }
+        });
+    }
+
+    private byte[] getTemperatureValue() {
+        return new byte[]{42};
     }
 }

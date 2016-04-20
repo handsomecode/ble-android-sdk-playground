@@ -8,28 +8,28 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="is.handsome.blesample.MainActivity">
+    tools:context=".PeripheralServerActivity">
 
     <TextView
-        android:id="@+id/main_status_text_view"
+        android:id="@+id/peripheral_server_status_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Status:"
+        android:text="@string/status"
         android:textAppearance="?android:textAppearanceLarge"/>
 
     <TextView
-        android:id="@+id/main_status_value_text_view"
+        android:id="@+id/peripheral_server_status_value_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        android:layout_toRightOf="@id/main_status_text_view"
+        android:layout_toRightOf="@id/peripheral_server_status_text_view"
         android:text="@string/status_not_started"
         android:textAppearance="?android:textAppearanceLarge"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/main_status_text_view"
+        android:layout_below="@id/peripheral_server_status_text_view"
         android:layout_marginTop="16dp"
         android:gravity="center_vertical">
 
@@ -38,11 +38,11 @@
             android:layout_height="wrap_content"
             android:layout_marginRight="16dp"
             android:layout_weight="1"
-            android:text="Start Server"
+            android:text="@string/start_server"
             android:textAppearance="?android:textAppearanceLarge"/>
 
         <Switch
-            android:id="@+id/main_start_server_switch"
+            android:id="@+id/peripheral_server_start_server_switch"
             android:layout_width="wrap_content"
             android:layout_height="48dp"/>
     </LinearLayout>
